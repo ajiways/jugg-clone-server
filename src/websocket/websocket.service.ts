@@ -273,7 +273,6 @@ export class WebsocketService {
 
         this.resolveGatherTry(
           selectedStrategyId,
-          this.currentStrategyId,
           chance,
           chanceToMasterUp,
           client,
@@ -286,7 +285,7 @@ export class WebsocketService {
   startStrategies(client: Socket) {
     setInterval(() => {
       client.emit('strategy:change', this.currentStrategyId);
-    }, 10000);
+    }, 5000);
   }
 
   updateSelectedStrategy(
@@ -312,13 +311,12 @@ export class WebsocketService {
 
   private async resolveGatherTry(
     selectedStrategy: number,
-    currentStrategy: number,
     chance: number,
     chanceToMasterUp: number,
     client: Socket,
     user: User,
   ) {
-    if (selectedStrategy === currentStrategy) {
+    if (selectedStrategy === this.currentStrategyId) {
       if (Math.random() < chance) {
         if (Math.random() < chanceToMasterUp) {
           user.mastery++;
