@@ -104,7 +104,7 @@ export class WebsocketService {
         throw new Error('Не могу найти клиента чтобы обновить фатиг');
 
       clientT.emit('fatigue:update', newFatigueLevel);
-    }, 1500);
+    }, 10000);
 
     this.gathererTimers.push({ login: data.login, timer: interval });
   }
