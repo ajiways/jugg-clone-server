@@ -5,18 +5,23 @@ import {
   TypeOrmModuleOptions,
 } from '@nestjs/typeorm';
 import { config } from 'dotenv';
+import { parse } from 'pg-connection-string';
 config();
 
 export function getOrmConfig(): TypeOrmModuleOptions {
   const config = new ConfigService();
 
+  const { host, password, user, port, database } = parse(
+    config.get('DATABASE_URL'),
+  );
+
   return {
     type: 'postgres',
-    host: config.get('DB_HOST'),
-    port: config.get<number>('DB_PORT'),
-    username: config.get('DB_USER'),
-    password: config.get('DB_PASSWORD'),
-    database: config.get('DB_NAME'),
+    host,
+    port: Number(port),
+    username: user,
+    password,
+    database,
     entities: [`${__dirname}/../**/*.entity.{ts,js}`],
     migrations: [`${__dirname}/../migrations/*.{ts,js}`],
     migrationsTableName: 'migrations',
@@ -26,6 +31,10 @@ export function getOrmConfig(): TypeOrmModuleOptions {
       migrationsDir: 'src/migrations',
     },
     migrationsRun: true,
+    ssl: {
+      requestCert: true,
+      rejectUnauthorized: false,
+    },
   };
 }
 
