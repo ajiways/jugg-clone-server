@@ -12,6 +12,7 @@ import { hash, compare } from 'bcrypt';
 import { Location } from './entities/location.entity';
 import { Resource as ResourceEntity } from './entities/resource.entity';
 import { GathererTimer } from './interfaces/gathrer.timer.interface';
+import { RatingItem } from './interfaces/rating.item.interface';
 
 @Injectable()
 export class WebsocketService {
@@ -37,6 +38,21 @@ export class WebsocketService {
 
   removeFromClients(client: Socket) {
     this.clients = this.clients.filter((cl) => cl.id !== client.id);
+  }
+
+  async sendRatingList(client: Socket) {
+    const ratingList = await this.userRepository.find({
+      take: 100,
+      order: { mastery: 'DESC' },
+    });
+
+    const ratingListArr: RatingItem[] = [];
+
+    ratingList.forEach(({ login, mastery }) =>
+      ratingListArr.push({ login, currentMastery: mastery }),
+    );
+
+    client.emit('rating:get:list:response', ratingListArr);
   }
 
   async updateFatigueStart(client: Socket, data: LoginData) {

@@ -56,4 +56,9 @@ export class WebsocketGateway
   updateFatigue(client: Socket, data: LoginData) {
     this.websocketService.updateFatigueStart(client, data);
   }
+
+  @SubscribeMessage('rating:get:list')
+  sendRatingList(client: Socket) {
+    this.websocketService.sendRatingList(client);
+  }
 }
