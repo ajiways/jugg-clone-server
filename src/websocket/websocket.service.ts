@@ -45,9 +45,17 @@ export class WebsocketService {
   }
 
   async handleMessage(data: Message) {
+    const date = new Date(Date.now());
+
+    data.date = date.toLocaleString('ru-RU', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+
     await this.messageRepository.save(data);
 
-    this.sendMessage();
+    this.sendMessage(data);
   }
 
   async sendMessages(client: Socket) {
@@ -60,12 +68,8 @@ export class WebsocketService {
     client.emit('messages:get:list', messages);
   }
 
-  async sendMessage() {
-    const lastMessage = await this.messageRepository.query(
-      'SELECT * FROM messages ORDER BY created_at DESC LIMIT 1',
-    );
-
-    this.clients.forEach((cl) => cl.emit('messages:new:get', lastMessage[0]));
+  async sendMessage(data: Message) {
+    this.clients.forEach((cl) => cl.emit('messages:new:get', data));
   }
 
   async sendRatingList(client: Socket) {
@@ -76,8 +80,8 @@ export class WebsocketService {
 
     const ratingListArr: RatingItem[] = [];
 
-    ratingList.forEach(({ login, mastery }) =>
-      ratingListArr.push({ login, currentMastery: mastery }),
+    ratingList.forEach(({ login, mastery, id }) =>
+      ratingListArr.push({ id, login, currentMastery: mastery }),
     );
 
     client.emit('rating:get:list:response', ratingListArr);
@@ -285,7 +289,7 @@ export class WebsocketService {
   startStrategies(client: Socket) {
     setInterval(() => {
       client.emit('strategy:change', this.currentStrategyId);
-    }, 5000);
+    }, 1000);
   }
 
   updateSelectedStrategy(
@@ -371,6 +375,6 @@ export class WebsocketService {
       this.currentStrategyId = Math.floor(
         Math.min(Math.max(Math.random() * 4, 1), 3),
       );
-    }, 5000);
+    }, 15000);
   }
 }
