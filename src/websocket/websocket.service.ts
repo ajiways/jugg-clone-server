@@ -13,6 +13,8 @@ import { Location } from './entities/location.entity';
 import { Resource as ResourceEntity } from './entities/resource.entity';
 import { GathererTimer } from './interfaces/gathrer.timer.interface';
 import { RatingItem } from './interfaces/rating.item.interface';
+import { Message } from './interfaces/message.interface';
+import { MessageEntity } from './entities/message.entity';
 
 @Injectable()
 export class WebsocketService {
@@ -22,6 +24,8 @@ export class WebsocketService {
     private readonly locationRepository: Repository<Location>,
     @InjectRepository(ResourceEntity)
     private readonly resourceRepository: Repository<ResourceEntity>,
+    @InjectRepository(MessageEntity)
+    private readonly messageRepository: Repository<Message>,
   ) {
     this.runStrategyIdChange();
   }
@@ -38,6 +42,30 @@ export class WebsocketService {
 
   removeFromClients(client: Socket) {
     this.clients = this.clients.filter((cl) => cl.id !== client.id);
+  }
+
+  async handleMessage(data: Message) {
+    await this.messageRepository.save(data);
+
+    this.sendMessage();
+  }
+
+  async sendMessages(client: Socket) {
+    const messages: Message[] = await this.messageRepository.query(
+      'SELECT * FROM messages ORDER BY created_at DESC LIMIT 25',
+    );
+
+    messages.reverse();
+
+    client.emit('messages:get:list', messages);
+  }
+
+  async sendMessage() {
+    const lastMessage = await this.messageRepository.query(
+      'SELECT * FROM messages ORDER BY created_at DESC LIMIT 1',
+    );
+
+    this.clients.forEach((cl) => cl.emit('messages:new:get', lastMessage[0]));
   }
 
   async sendRatingList(client: Socket) {

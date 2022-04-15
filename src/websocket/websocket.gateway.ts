@@ -6,6 +6,7 @@ import {
 } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 import { GatherStartData } from './interfaces/gather.start.data.interface';
+import { Message } from './interfaces/message.interface';
 import { StrategyChangeData } from './interfaces/strategy.change.data.interface';
 import {
   LoginData,
@@ -29,6 +30,7 @@ export class WebsocketGateway
     this.websocketService.addToClients(client);
     this.websocketService.sendResources(client);
     this.websocketService.sendLocations(client);
+    this.websocketService.sendMessages(client);
     this.websocketService.startStrategies(client);
   }
 
@@ -60,5 +62,10 @@ export class WebsocketGateway
   @SubscribeMessage('rating:get:list')
   sendRatingList(client: Socket) {
     this.websocketService.sendRatingList(client);
+  }
+
+  @SubscribeMessage('chat:message:send')
+  recieveMessage(client: Socket, data: Message) {
+    this.websocketService.handleMessage(data);
   }
 }
