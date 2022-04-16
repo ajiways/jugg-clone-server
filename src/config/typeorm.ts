@@ -15,6 +15,27 @@ export function getOrmConfig(): TypeOrmModuleOptions {
     config.get('DATABASE_URL'),
   );
 
+  const MODE = config.get('NODE_ENV');
+
+  if (MODE === 'dev')
+    return {
+      type: 'postgres',
+      host,
+      port: Number(port),
+      username: user,
+      password,
+      database,
+      entities: [`${__dirname}/../**/*.entity.{ts,js}`],
+      migrations: [`${__dirname}/../migrations/*.{ts,js}`],
+      migrationsTableName: 'migrations',
+      namingStrategy: new SnakeNamingStrategy(),
+      logging: 'all',
+      cli: {
+        migrationsDir: 'src/migrations',
+      },
+      migrationsRun: true,
+    };
+
   return {
     type: 'postgres',
     host,
@@ -30,11 +51,11 @@ export function getOrmConfig(): TypeOrmModuleOptions {
     cli: {
       migrationsDir: 'src/migrations',
     },
-    migrationsRun: true,
     ssl: {
       requestCert: true,
       rejectUnauthorized: false,
     },
+    migrationsRun: true,
   };
 }
 
